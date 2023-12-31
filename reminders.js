@@ -2,44 +2,6 @@
 
 const RemindersApp = Application('Reminders');
 
-function chooseAddOption(args) {
-  if (args.length > 1) {
-    if (args[1] === '-t') {
-      addReminderToList(args[2], args.slice(3).join(' '));
-    } else {
-      addReminder(args.slice(1).join(' '))
-    }
-  } else {
-    console.log('Please provide a reminder text to add')
-  }
-}
-
-function chooseLsOption(args) {
-  if (args.length > 1) {
-    if (args[1] === '-t') {
-      showRemindersFromList(args.slice(2).join(' '));
-    } else if (args[1] === 'lists') {
-      showLists()
-    } else {
-      console.log("That is not a valid argument")
-    }
-  } else {
-    showReminders()
-  }
-}
-
-function chooseCheckOption(args) {
-  if (args.length > 1) {
-    if (args[1] === '-t') {
-      checkReminderFromList(args[2], args.slice(3).join(' '));
-    } else {
-      checkReminderFromList('Reminders', args.slice(1).join(' '))
-    }
-  } else {
-    console.log('Please provide the number of the reminder to complete')
-  }
-}
-
 function showLists() {
   const reminderList = RemindersApp.lists.name();
 
@@ -54,32 +16,19 @@ function showLists() {
   }
 }
 
-function showReminders() {
-  const reminders = RemindersApp.defaultList.reminders();
-
-  if (reminders.length === 0) {
-    console.log("No reminders found")
-  } else {
-    console.log("Reminders:")
-    const reminderNames = RemindersApp.defaultList.reminders.name()
-    const reminderStatuses = RemindersApp.defaultList.reminders.completed()
-
-    for (let i = 0; i < reminders.length; i++) {
-      if(reminderStatuses[i] == false){
-        console.log(`${i}: ${reminderNames[i]}`);
-      }
-    }
-  }
-}
-
-function showRemindersFromList(listName) {
+function showReminders(listName = 'Reminders') {
   const reminderList = RemindersApp.lists.whose({ name: listName });
 
   if(reminderList.length === 0) {
     console.log(`There is no ${listName} list`)
     return;
   }
+
   const reminderNames = RemindersApp.lists.whose({ name: listName })[0].reminders.name();
+  if (reminderNames.length === 0) {
+    console.log(`List ${listName} is empty`)
+    return;
+  }
   const reminderStatuses = RemindersApp.lists.whose({ name: listName })[0].reminders.completed()
 
   for (let i = 0; i < reminderNames.length; i++) {
@@ -96,13 +45,11 @@ function createNextDayMorningDate() {
   return newDate
 }
 
-function addReminder(name) {
-  reminder = RemindersApp.Reminder({name: name, dueDate: createNextDayMorningDate()});
-  RemindersApp.defaultList.reminders.push(reminder);
-  console.log(`Added reminder '${name}'`)
-}
-
 function addReminderToList(listName, name) {
+  if(!name) {
+    console.log("Please provide a reminder text to add")
+    return;
+  }
   console.log(`List: ${listName}`)
   console.log(`Reminder: ${name}`)
 
@@ -117,7 +64,11 @@ function addReminderToList(listName, name) {
   console.log(`Added reminder '${name}' to list '${listName}'`)
 }
 
-function checkReminderFromList(listName, index) {
+function markReminderAsComplete(listName, index) {
+  if( !index ) {
+    console.log("Please provide the index of the reminder you would like to complete")
+    return;
+  }
   console.log(`List: ${listName}`)
   console.log(`Reminder index: ${index}`)
 
@@ -139,7 +90,7 @@ function checkReminderFromList(listName, index) {
 }
 
 function displayHelp() {
-  console.log("Reminders terminal interface:");
+  console.log("Reminders CLI interface:");
   console.log("rem add <name>                   --> add a reminder <name> to the default list");
   console.log("rem add -t <list_name> <name>    --> add a reminder <name> in the list <list_name>");
   console.log("rem ls lists                     --> show lists of reminders");
@@ -151,25 +102,40 @@ function displayHelp() {
 
 function run(args) {
   if (args.length === 0) {
-    console.log("Please provide an argument: 'add' to add a reminder or 'ls' to display all reminders");
+    console.log("Please provide an argument: 'add' to add a reminder, 'ls' to display reminders, 'check' to mark a reminder as complete, or 'help'");
     return;
   }
-  switch (args[0]) {
+  const [command, option1, option2] = args;
+  switch (command) {
     case 'add':
-      chooseAddOption(args)
+      if (option1 === '-t') {
+        addReminderToList(option2, args.slice(3).join(' '));
+      } else {
+        addReminderToList('Reminders', args.slice(1).join(' '));
+      }
       break;
     case 'ls':
-      chooseLsOption(args)
+      if (option1 === 'lists') {
+        showLists();
+      } else if (option1 === '-t') {
+        showReminders(option2);
+      } else {
+        showReminders();
+      }
       break;
     case 'check':
-      chooseCheckOption(args)
+      if (option1 === '-t') {
+        markReminderAsComplete(option2, args[3]);
+      } else {
+        markReminderAsComplete('Reminders', args[1]);
+      }
       break;
     case 'help':
     case 'h':
       displayHelp()
       break;
     default:
-      console.log("Invalid argument. Use 'add' to add a reminder or 'ls' to display all reminders");
+      console.log("Invalid argument.");
       break;
   }
 }
