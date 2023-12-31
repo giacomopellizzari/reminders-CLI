@@ -30,7 +30,7 @@ alias rem='osascript -l JavaScript <path-to-reminders.js>'
 - `rem add -t <target-list> <reminder>`: Adds a reminder to the specified 'target-list'.
 
 ### Completing Reminders
-- `rem check <index>`: marks the specified reminder as completed.
+- `rem check <index>`: marks the specified reminder from the default 'reminders' list as completed.
 - `rem check -t <target-list> <index>`: marks the specified reminder from 'target-list' as completed.
 
 ### Help
