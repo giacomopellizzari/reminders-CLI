@@ -28,6 +28,18 @@ function chooseLsOption(args) {
   }
 }
 
+function chooseCheckOption(args) {
+  if (args.length > 1) {
+    if (args[1] === '-t') {
+      checkReminderFromList(args[2], args.slice(3).join(' '));
+    } else {
+      checkReminderFromList('Reminders', args.slice(1).join(' '))
+    }
+  } else {
+    console.log('Please provide the number of the reminder to complete')
+  }
+}
+
 function showLists() {
   const reminderList = RemindersApp.lists.name();
 
@@ -68,9 +80,12 @@ function showRemindersFromList(listName) {
     return;
   }
   const reminderNames = RemindersApp.lists.whose({ name: listName })[0].reminders.name();
+  const reminderStatuses = RemindersApp.lists.whose({ name: listName })[0].reminders.completed()
 
   for (let i = 0; i < reminderNames.length; i++) {
-    console.log(`${i}: ${reminderNames[i]}`);
+    if(reminderStatuses[i] == false){
+      console.log(`${i}: ${reminderNames[i]}`);
+    }
   }
 }
 
@@ -102,14 +117,36 @@ function addReminderToList(listName, name) {
   console.log(`Added reminder '${name}' to list '${listName}'`)
 }
 
+function checkReminderFromList(listName, index) {
+  console.log(`List: ${listName}`)
+  console.log(`Reminder index: ${index}`)
+
+  const targetList = RemindersApp.lists.whose({ name: listName })[0];
+  if(targetList.length === 0) {
+    console.log(`There is no ${listName} list`)
+    return;
+  }
+  
+  reminders = targetList.reminders()
+
+  if (index >= 0 && index < reminders.length) {
+    const reminder = reminders[index];
+    reminder.completed = true;
+    console.log(`Marked reminder '${reminder.name()}' from list '${listName}' as complete.`);
+  } else {
+    console.log('Reminder index out of range or invalid.');
+  }
+}
+
 function displayHelp() {
   console.log("Reminders terminal interface:");
-  console.log("rem add <name>                 --> add a reminder <name> to the default list");
-  console.log("rem add -t <list_name> <name>  --> add a reminder <name> in the list <list_name>");
-  console.log("rem ls lists                   --> show lists of reminders");
-  console.log("rem ls                         --> show reminders in the default list");
-  console.log("rem ls -t <list_name>          --> show reminders of the list named <list_name>");
-  console.log("rem help                       --> get help")
+  console.log("rem add <name>                   --> add a reminder <name> to the default list");
+  console.log("rem add -t <list_name> <name>    --> add a reminder <name> in the list <list_name>");
+  console.log("rem ls lists                     --> show lists of reminders");
+  console.log("rem ls                           --> show reminders in the default list");
+  console.log("rem ls -t <list_name>            --> show reminders of the list named <list_name>");
+  console.log("rem check -t <list_name> <index> --> mark reminder as completed");
+  console.log("rem help                         --> get help")
 }
 
 function run(args) {
@@ -123,6 +160,9 @@ function run(args) {
       break;
     case 'ls':
       chooseLsOption(args)
+      break;
+    case 'check':
+      chooseCheckOption(args)
       break;
     case 'help':
     case 'h':
